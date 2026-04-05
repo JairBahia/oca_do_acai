@@ -104,6 +104,7 @@ class AboutScreen extends StatelessWidget {
 
                 _InfoRow(label: 'Integrante 1:', value: 'Jair Henrique De Castro Leão'),
                 _InfoRow(label: 'Integrante 2:', value: 'Miguel Lemos Nacarato'),
+                _InfoRow(label: 'Repositório:', value: 'https://github.com/JairBahia/oca_do_acai.git'),
               ],
             ),
           ),
@@ -123,7 +124,7 @@ class AboutScreen extends StatelessWidget {
                 _InfoRow(label: 'Professor:', value: 'Prof. Dr. Rodrigo Plotze'),
                 _InfoRow(
                   label: 'Instituição:',
-                  value: 'Nome da Instituição',
+                  value: 'UNAERP',
                 ),
                 _InfoRow(label: 'Versão:', value: '1.0.0'),
               ],
