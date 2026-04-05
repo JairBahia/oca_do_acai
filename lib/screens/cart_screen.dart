@@ -15,8 +15,42 @@ class CartScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Meu Carrinho'),
-      ),
+  title: const Text('Meu Carrinho'),
+  actions: [
+    ListenableBuilder(
+      listenable: cartService,
+      builder: (context, _) {
+        if (cartService.isEmpty) return const SizedBox();
+        return IconButton(
+          icon: const Icon(Icons.delete_sweep_outlined),
+          tooltip: 'Limpar carrinho',
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (_) => AlertDialog(
+                title: const Text('Limpar carrinho'),
+                content: const Text('Deseja remover todos os itens?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancelar'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      cartService.clear();
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Limpar'),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    ),
+  ],
+),
       drawer: const AppDrawer(),
       // ListenableBuilder reconstrói a tela sempre que o carrinho mudar (ChangeNotifier)
       body: ListenableBuilder(
