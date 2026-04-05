@@ -25,3 +25,7 @@ flutter run
 
 - Jair Henrique De Castro Leão.
 - Miguel Lemos Nacarato.
+
+## Nosso repositorio 
+
+- https://github.com/JairBahia/oca_do_acai.git
