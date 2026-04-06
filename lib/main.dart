@@ -31,7 +31,6 @@ class OcaDoAcaiApp extends StatelessWidget {
       title: 'Oca do Açaí',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.theme,
-      useInheritedMediaQuery: true,
       locale: DevicePreview.locale(context),
       builder: DevicePreview.appBuilder,
       home: const LoginScreen(),

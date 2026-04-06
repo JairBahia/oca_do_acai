@@ -268,7 +268,7 @@ class _ProductImage extends StatelessWidget {
     return Container(
       width: 80,
       height: 80,
-      color: AppTheme.secondaryColor.withOpacity(0.2),
+      color: AppTheme.secondaryColor.withValues(alpha: 0.2),
       child: Image.asset(
         imagePath,
         width: 80,

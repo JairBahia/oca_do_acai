@@ -27,7 +27,7 @@ class AboutScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(55),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.primaryColor.withOpacity(0.3),
+                    color: AppTheme.primaryColor.withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 5),
                   ),
@@ -61,10 +61,10 @@ class AboutScreen extends StatelessWidget {
           const SizedBox(height: 28),
 
           // ── Objetivo do Aplicativo ─────────────────────────────
-          _SectionCard(
+          const _SectionCard(
             icon: Icons.info_outline,
             title: 'Objetivo do Aplicativo',
-            child: const Text(
+            child: Text(
               'Este aplicativo foi desenvolvido para digitalizar o cardápio da Oca do Açaí, '
               'permitindo que os clientes visualizem os produtos disponíveis e realizem '
               'pedidos de forma prática e intuitiva, diretamente pelo celular.',
@@ -75,12 +75,12 @@ class AboutScreen extends StatelessWidget {
           const SizedBox(height: 16),
 
           // ── Informações do Estabelecimento ────────────────────
-          _SectionCard(
+          const _SectionCard(
             icon: Icons.store_outlined,
             title: 'Estabelecimento',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 _InfoRow(label: 'Nome:', value: 'Oca do Açaí'),
                 _InfoRow(label: 'Segmento:', value: 'Lanchonete / Casa de Açaí'),
                 _InfoRow(
@@ -95,12 +95,12 @@ class AboutScreen extends StatelessWidget {
           const SizedBox(height: 16),
 
           // ── Equipe de Desenvolvimento ─────────────────────────
-          _SectionCard(
+          const _SectionCard(
             icon: Icons.group_outlined,
             title: 'Equipe de Desenvolvimento',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
 
                 _InfoRow(label: 'Integrante 1:', value: 'Jair Henrique De Castro Leão'),
                 _InfoRow(label: 'Integrante 2:', value: 'Miguel Lemos Nacarato'),
@@ -112,12 +112,12 @@ class AboutScreen extends StatelessWidget {
           const SizedBox(height: 16),
 
           // ── Informações Acadêmicas ────────────────────────────
-          _SectionCard(
+          const _SectionCard(
             icon: Icons.school_outlined,
             title: 'Informações Acadêmicas',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 _InfoRow(
                     label: 'Disciplina:',
                     value: 'Prática Extensionista VIII'),
@@ -138,7 +138,7 @@ class AboutScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: AppTheme.secondaryColor.withOpacity(0.3),
+                color: AppTheme.secondaryColor.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: AppTheme.secondaryColor),
               ),
