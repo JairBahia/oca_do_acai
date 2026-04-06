@@ -5,6 +5,7 @@ import '../screens/cart_screen.dart';
 import '../screens/menu_screen.dart';
 import '../services/cart_service.dart';
 import 'package:get_it/get_it.dart';
+import '../screens/login_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -148,6 +149,22 @@ class AppDrawer extends StatelessWidget {
             ),
           ),
 
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.logout, color: Colors.red),
+                    title: const Text(
+                      'Sair',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                    onTap: () {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        (route) => false, 
+                      );
+                    },
+                  ),
+                  
           // ── Rodapé ─────────────────────────────────────────────
           const Padding(
             padding: EdgeInsets.all(16),
