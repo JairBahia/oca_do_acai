@@ -22,22 +22,31 @@ class AppDrawer extends StatelessWidget {
               color: AppTheme.primaryColor,
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // Logo / imagem do estabelecimento
                 Container(
-                  width: 64,
-                  height: 64,
+                  width: 90,
+                  height: 90,
                   decoration: BoxDecoration(
-                    color: AppTheme.secondaryColor,
-                    borderRadius: BorderRadius.circular(32),
+                    color: AppTheme.primaryColor,
+                    shape: BoxShape.circle,
                     border: Border.all(color: Colors.white, width: 2),
                   ),
-                  child: const Icon(
-                    Icons.local_dining,
-                    color: Colors.white,
-                    size: 36,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(40),
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(
+                          Icons.local_dining,
+                          color: Colors.white,
+                          size: 36,
+                        );
+                      },
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
