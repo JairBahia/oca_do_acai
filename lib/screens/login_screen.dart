@@ -74,52 +74,43 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                
                 // ──Imagem do Estabelecimento ──────────────
-                Center(
-                  child: Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor,
-                      borderRadius: BorderRadius.circular(60),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.primaryColor.withOpacity(0.35),
-                          blurRadius: 16,
-                          offset: const Offset(0, 6),
+                Transform.translate(
+                  offset: const Offset(0, -30),
+                  child: Center(               
+                    child: Container(
+                      width: 160,
+                      height: 160,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.primaryColor.withValues(alpha: 0.35),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(80),
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(
+                              Icons.local_dining,
+                              color: Colors.white,
+                              size: 64,
+                            );
+                          },
                         ),
-                      ],
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.local_dining,
-                      color: Colors.white,
-                      size: 64,
-                    ),
+                  ),
+                ),
                     
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                const Center(
-                  child: Text(
-                    'Oca do Açaí',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.primaryColor,
-                    ),
-                  ),
-                ),
-                const Center(
-                  child: Text(
-                    'Faça login para continuar',
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                ),
-
-                const SizedBox(height: 36),
-
                 // ── Formulário ────────────────────────────────────
                 Form(
                   key: _formKey,
