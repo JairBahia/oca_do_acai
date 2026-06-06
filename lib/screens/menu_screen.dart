@@ -8,8 +8,7 @@ import '../services/cart_service.dart';
 import '../services/firestore_service.dart';
 import '../widgets/app_drawer.dart';
 import 'cart_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../data/menu_data.dart';
+
 
 // Categorias na mesma ordem do cardápio físico
 const List<String> _kCategories = [
