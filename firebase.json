@@ -1,1 +1,16 @@
-{"flutter":{"platforms":{"dart":{"lib/firebase_options.dart":{"projectId":"oca-do-acai-c155f","configurations":{"web":"1:119818487892:web:1506325509e1da79b205c1"}}}}}}
+{
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
