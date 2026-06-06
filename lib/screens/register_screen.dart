@@ -1,6 +1,10 @@
-// RF002 – Cadastro de Usuário
+// RF002 – Cadastro de Usuário com Firebase Authentication
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
+
 import '../app_theme.dart';
+import '../services/auth_service.dart';
 import 'menu_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -17,6 +21,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _telefoneController = TextEditingController();
   final _senhaController = TextEditingController();
   final _confirmacaoController = TextEditingController();
+  final AuthService _authService = GetIt.instance<AuthService>();
+
   bool _obscureSenha = true;
   bool _obscureConfirmacao = true;
   bool _isLoading = false;
@@ -38,7 +44,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   String? _validarEmail(String? v) {
     if (v == null || v.trim().isEmpty) return 'Informe o e-mail';
-    final regex = RegExp(r'^[\w\.-]+@[\w\.-]+\.\w{2,}$');
+    final regex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
     if (!regex.hasMatch(v.trim())) return 'E-mail inválido';
     return null;
   }
@@ -64,33 +70,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1));
 
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+    try {
+      await _authService.signUp(
+        _emailController.text,
+        _senhaController.text,
+      );
 
-    // Feedback de sucesso ao usuário
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Cadastro realizado com sucesso! Bem-vindo(a)!'),
-        backgroundColor: AppTheme.successColor,
-      ),
-    );
+      if (!mounted) return;
 
-    // Navega para o cardápio após cadastro
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const MenuScreen()),
-      (route) => false,
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cadastro realizado com sucesso! Bem-vindo(a)!'),
+          backgroundColor: AppTheme.successColor,
+        ),
+      );
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const MenuScreen()),
+        (route) => false,
+      );
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AuthService.mensagemErro(e.code)),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Criar Conta'),
-      ),
+      appBar: AppBar(title: const Text('Criar Conta')),
       backgroundColor: AppTheme.backgroundLight,
       body: SafeArea(
         child: SingleChildScrollView(

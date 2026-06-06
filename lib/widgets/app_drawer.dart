@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
+
 import '../app_theme.dart';
 import '../screens/about_screen.dart';
 import '../screens/cart_screen.dart';
-import '../screens/menu_screen.dart';
-import '../services/cart_service.dart';
-import 'package:get_it/get_it.dart';
 import '../screens/login_screen.dart';
+import '../screens/menu_screen.dart';
+import '../services/auth_service.dart';
+import '../services/cart_service.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -13,20 +15,18 @@ class AppDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cartService = GetIt.instance<CartService>();
+    final authService = GetIt.instance<AuthService>();
 
     return Drawer(
       child: Column(
         children: [
-          // ── Cabeçalho ─────────────────────────
+          // ── Cabeçalho ──────────────────────────────────────────
           DrawerHeader(
-            decoration: const BoxDecoration(
-              color: AppTheme.primaryColor,
-            ),
+            decoration: const BoxDecoration(color: AppTheme.primaryColor),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo / imagem do estabelecimento
                 Container(
                   width: 90,
                   height: 90,
@@ -41,11 +41,8 @@ class AppDrawer extends StatelessWidget {
                       'assets/images/logo.png',
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
-                        return const Icon(
-                          Icons.local_dining,
-                          color: Colors.white,
-                          size: 36,
-                        );
+                        return const Icon(Icons.local_dining,
+                            color: Colors.white, size: 36);
                       },
                     ),
                   ),
@@ -54,17 +51,13 @@ class AppDrawer extends StatelessWidget {
                 const Text(
                   'Oca do Açaí',
                   style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold),
                 ),
                 const Text(
                   'Cardápio Digital',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13,
-                  ),
+                  style: TextStyle(color: Colors.white70, fontSize: 13),
                 ),
               ],
             ),
@@ -82,13 +75,11 @@ class AppDrawer extends StatelessWidget {
                     Navigator.pop(context);
                     Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(
-                          builder: (_) => const MenuScreen()),
+                      MaterialPageRoute(builder: (_) => const MenuScreen()),
                       (route) => false,
                     );
                   },
                 ),
-                // Carrinho de quantidade
                 ListenableBuilder(
                   listenable: cartService,
                   builder: (context, _) {
@@ -140,8 +131,7 @@ class AppDrawer extends StatelessWidget {
                     Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                          builder: (_) => const AboutScreen()),
+                      MaterialPageRoute(builder: (_) => const AboutScreen()),
                     );
                   },
                 ),
@@ -149,29 +139,55 @@ class AppDrawer extends StatelessWidget {
             ),
           ),
 
-                  const Divider(),
-                  ListTile(
-                    leading: const Icon(Icons.logout, color: Colors.red),
-                    title: const Text(
-                      'Sair',
-                      style: TextStyle(color: Colors.red),
-                    ),
-                    onTap: () {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
-                        (route) => false, 
-                      );
-                    },
+          const Divider(),
+
+          // Botão Sair com confirmação quando há itens no carrinho
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text('Sair', style: TextStyle(color: Colors.red)),
+            onTap: () async {
+              final temItens = cartService.totalQuantity > 0;
+
+              if (temItens) {
+                final confirmar = await showDialog<bool>(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                    title: const Text('Sair do aplicativo?'),
+                    content: const Text(
+                        'Você tem itens no carrinho. Ao sair, eles serão perdidos.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancelar'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red),
+                        child: const Text('Sair assim mesmo'),
+                      ),
+                    ],
                   ),
-                  
-          // ── Rodapé ─────────────────────────────────────────────
+                );
+                if (confirmar != true) return;
+              }
+
+              cartService.clear();
+              await authService.signOut();
+
+              if (!context.mounted) return;
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (route) => false,
+              );
+            },
+          ),
+
           const Padding(
             padding: EdgeInsets.all(16),
-            child: Text(
-              'v1.0.0',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
-            ),
+            child: Text('v1.0.0',
+                style: TextStyle(color: Colors.grey, fontSize: 12)),
           ),
         ],
       ),
@@ -179,7 +195,6 @@ class AppDrawer extends StatelessWidget {
   }
 }
 
-// Widget auxiliar para itens do Drawer
 class _DrawerItem extends StatelessWidget {
   final IconData icon;
   final String label;

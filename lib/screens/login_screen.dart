@@ -1,6 +1,10 @@
-// RF001 – Login
+// RF001 – Login com Firebase Authentication
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
+
 import '../app_theme.dart';
+import '../services/auth_service.dart';
 import 'forgot_password_screen.dart';
 import 'menu_screen.dart';
 import 'register_screen.dart';
@@ -16,6 +20,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _senhaController = TextEditingController();
+  final AuthService _authService = GetIt.instance<AuthService>();
+
   bool _obscureSenha = true;
   bool _isLoading = false;
 
@@ -26,41 +32,47 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // Validação de e-mail (RF001)
   String? _validarEmail(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Informe o e-mail';
-    }
-    final regex = RegExp(r'^[\w\.-]+@[\w\.-]+\.\w{2,}$');
-    if (!regex.hasMatch(value.trim())) {
-      return 'E-mail inválido';
-    }
+    if (value == null || value.trim().isEmpty) return 'Informe o e-mail';
+    final regex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    if (!regex.hasMatch(value.trim())) return 'E-mail inválido';
     return null;
   }
 
-  // Validação de senha (RF001)
   String? _validarSenha(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Informe a senha';
-    }
+    if (value == null || value.isEmpty) return 'Informe a senha';
     return null;
   }
 
-  // Simula autenticação 
   Future<void> _entrar() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1)); 
 
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+    try {
+      await _authService.signIn(
+        _emailController.text,
+        _senhaController.text,
+      );
 
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const MenuScreen()),
-      (route) => false,
-    );
+      if (!mounted) return;
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const MenuScreen()),
+        (route) => false,
+      );
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AuthService.mensagemErro(e.code)),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -70,48 +82,46 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+            padding: const EdgeInsets.fromLTRB(28, 48, 28, 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                
-                // ──Imagem do Estabelecimento ──────────────
-                Transform.translate(
-                  offset: const Offset(0, -30),
-                  child: Center(               
-                    child: Container(
-                      width: 160,
-                      height: 160,
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryColor,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.primaryColor.withValues(alpha: 0.35),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(80),
-                        child: Image.asset(
-                          'assets/images/logo.png',
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(
-                              Icons.local_dining,
-                              color: Colors.white,
-                              size: 64,
-                            );
-                          },
+                // ── Logo ────────────────────────────────────────
+                Center(
+                  child: Container(
+                    width: 160,
+                    height: 160,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.primaryColor.withValues(alpha: 0.35),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
                         ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(80),
+                      child: Image.asset(
+                        'assets/images/logo.png',
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(
+                            Icons.local_dining,
+                            color: Colors.white,
+                            size: 64,
+                          );
+                        },
                       ),
                     ),
                   ),
                 ),
-                    
-                // ── Formulário ────────────────────────────────────
+
+                const SizedBox(height: 32),
+
+                // ── Formulário ──────────────────────────────────
                 Form(
                   key: _formKey,
                   child: Column(

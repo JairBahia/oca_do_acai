@@ -1,12 +1,30 @@
-// RF005 – Visualizar Cardápio | RF006 – Adicionar Item ao Pedido
+// RF005 – Visualizar Cardápio (Firestore) | RF006 – Adicionar Item ao Pedido
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+
 import '../app_theme.dart';
-import '../data/menu_data.dart';
 import '../models/product.dart';
 import '../services/cart_service.dart';
+import '../services/firestore_service.dart';
 import '../widgets/app_drawer.dart';
 import 'cart_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../data/menu_data.dart';
+
+// Categorias na mesma ordem do cardápio físico
+const List<String> _kCategories = [
+  'Açaí na Tigela',
+  'Tapiocas',
+  'Tapiocas Doces',
+  'Lanches Quentes',
+  'Hot Dog',
+  'Hamburguer',
+  'Marmitas Fitness',
+  'Sucos Naturais',
+  'Vitaminas e Frapês',
+  'Sucos Especiais',
+  'Sucos Detox',
+];
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});
@@ -19,14 +37,12 @@ class _MenuScreenState extends State<MenuScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final CartService _cartService = GetIt.instance<CartService>();
+  final FirestoreService _firestoreService = GetIt.instance<FirestoreService>();
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(
-      length: MenuData.categories.length,
-      vsync: this,
-    );
+    _tabController = TabController(length: _kCategories.length, vsync: this);
   }
 
   @override
@@ -35,7 +51,6 @@ class _MenuScreenState extends State<MenuScreen>
     super.dispose();
   }
 
-  // RF006: adiciona item ao carrinho e exibe feedback
   void _addToCart(Product product) {
     _cartService.addItem(product);
     ScaffoldMessenger.of(context).clearSnackBars();
@@ -73,7 +88,6 @@ class _MenuScreenState extends State<MenuScreen>
       appBar: AppBar(
         title: const Text('Oca do Açaí'),
         actions: [
-          // Ícone do carrinho
           ListenableBuilder(
             listenable: _cartService,
             builder: (context, _) {
@@ -83,8 +97,7 @@ class _MenuScreenState extends State<MenuScreen>
                     icon: const Icon(Icons.shopping_cart_outlined),
                     onPressed: () => Navigator.push(
                       context,
-                      MaterialPageRoute(
-                          builder: (_) => const CartScreen()),
+                      MaterialPageRoute(builder: (_) => const CartScreen()),
                     ),
                   ),
                   if (_cartService.totalQuantity > 0)
@@ -112,7 +125,6 @@ class _MenuScreenState extends State<MenuScreen>
             },
           ),
         ],
-        // TabBar de categorias dentro do AppBar
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
@@ -120,20 +132,78 @@ class _MenuScreenState extends State<MenuScreen>
           unselectedLabelColor: Colors.white54,
           indicatorColor: AppTheme.secondaryColor,
           indicatorWeight: 3,
-          tabs: MenuData.categories
-              .map((cat) => Tab(text: cat))
-              .toList(),
+          tabs: _kCategories.map((cat) => Tab(text: cat)).toList(),
         ),
       ),
       drawer: const AppDrawer(),
-      body: TabBarView(
-        controller: _tabController,
-        children: MenuData.categories
-            .map((cat) => _CategoryTab(
-                  category: cat,
-                  onAddToCart: _addToCart,
-                ))
-            .toList(),
+      
+      // StreamBuilder escuta o Firestore em tempo real
+      body: StreamBuilder<List<Product>>(
+        stream: _firestoreService.cardapioStream(),
+        builder: (context, snapshot) {
+          // Estado de carregamento
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: AppTheme.primaryColor),
+                  SizedBox(height: 16),
+                  Text('Carregando cardápio...'),
+                ],
+              ),
+            );
+          }
+
+          // Estado de erro
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.cloud_off,
+                        size: 64, color: AppTheme.errorColor),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Erro ao carregar o cardápio.',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      snapshot.error.toString(),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          // Estado sem dados
+          final allProducts = snapshot.data ?? [];
+          if (allProducts.isEmpty) {
+            return const Center(
+              child: Text('Nenhum produto encontrado no cardápio.'),
+            );
+          }
+
+          // Monta as abas com os dados do Firestore
+          return TabBarView(
+            controller: _tabController,
+            children: _kCategories.map((cat) {
+              final products =
+                  allProducts.where((p) => p.category == cat).toList();
+              return _CategoryTab(
+                category: cat,
+                products: products,
+                onAddToCart: _addToCart,
+              );
+            }).toList(),
+          );
+        },
       ),
     );
   }
@@ -142,17 +212,17 @@ class _MenuScreenState extends State<MenuScreen>
 // ─── Aba de uma categoria ─────────────────────────────────────────────────────
 class _CategoryTab extends StatelessWidget {
   final String category;
+  final List<Product> products;
   final void Function(Product) onAddToCart;
 
   const _CategoryTab({
     required this.category,
+    required this.products,
     required this.onAddToCart,
   });
 
   @override
   Widget build(BuildContext context) {
-    final products = MenuData.byCategory(category);
-
     if (products.isEmpty) {
       return const Center(child: Text('Nenhum item disponível.'));
     }
@@ -176,10 +246,7 @@ class _ProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback onAddToCart;
 
-  const _ProductCard({
-    required this.product,
-    required this.onAddToCart,
-  });
+  const _ProductCard({required this.product, required this.onAddToCart});
 
   @override
   Widget build(BuildContext context) {
@@ -190,14 +257,11 @@ class _ProductCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Imagem do produto
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: _ProductImage(imagePath: product.imagePath),
             ),
             const SizedBox(width: 12),
-
-            // Informações (nome, descrição, preço)
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -214,16 +278,12 @@ class _ProductCard extends StatelessWidget {
                   Text(
                     product.description,
                     style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 12,
-                      height: 1.4,
-                    ),
+                        color: Colors.grey, fontSize: 12, height: 1.4),
                   ),
                   const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Preço
                       Text(
                         'R\$ ${product.price.toStringAsFixed(2).replaceAll('.', ',')}',
                         style: const TextStyle(
@@ -232,7 +292,6 @@ class _ProductCard extends StatelessWidget {
                           color: AppTheme.primaryColor,
                         ),
                       ),
-                      // Botão adicionar
                       ElevatedButton.icon(
                         onPressed: onAddToCart,
                         style: ElevatedButton.styleFrom(
@@ -257,14 +316,13 @@ class _ProductCard extends StatelessWidget {
   }
 }
 
-// ─── Imagem do produto ──────────────────────────────────────────
+// ─── Imagem do produto ────────────────────────────────────────────────────────
 class _ProductImage extends StatelessWidget {
   final String imagePath;
   const _ProductImage({required this.imagePath});
 
   @override
   Widget build(BuildContext context) {
-    
     return Container(
       width: 80,
       height: 80,
@@ -274,7 +332,6 @@ class _ProductImage extends StatelessWidget {
         width: 80,
         height: 80,
         fit: BoxFit.cover,
-        
         errorBuilder: (_, __, ___) => const Center(
           child: Icon(Icons.fastfood, color: AppTheme.primaryColor, size: 36),
         ),

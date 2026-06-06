@@ -1,6 +1,10 @@
-// RF003 – Recuperação de Senha
+// RF003 – Recuperação de Senha via Firebase Authentication
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
+
 import '../app_theme.dart';
+import '../services/auth_service.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -12,6 +16,8 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  final AuthService _authService = GetIt.instance<AuthService>();
+
   bool _isLoading = false;
   bool _enviado = false;
 
@@ -23,7 +29,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   String? _validarEmail(String? v) {
     if (v == null || v.trim().isEmpty) return 'Informe o e-mail';
-    final regex = RegExp(r'^[\w\.-]+@[\w\.-]+\.\w{2,}$');
+    final regex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
     if (!regex.hasMatch(v.trim())) return 'E-mail inválido';
     return null;
   }
@@ -32,21 +38,31 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1));
 
-    if (!mounted) return;
-    setState(() {
-      _isLoading = false;
-      _enviado = true;
-    });
+    try {
+      await _authService.resetPassword(_emailController.text);
+
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _enviado = true;
+      });
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AuthService.mensagemErro(e.code)),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Recuperar Senha'),
-      ),
+      appBar: AppBar(title: const Text('Recuperar Senha')),
       backgroundColor: AppTheme.backgroundLight,
       body: SafeArea(
         child: Padding(
@@ -63,11 +79,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Icon(
-            Icons.lock_reset,
-            size: 72,
-            color: AppTheme.primaryColor,
-          ),
+          const Icon(Icons.lock_reset, size: 72, color: AppTheme.primaryColor),
           const SizedBox(height: 20),
           const Center(
             child: Text(
@@ -131,11 +143,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Icon(
-          Icons.mark_email_read_outlined,
-          size: 80,
-          color: AppTheme.successColor,
-        ),
+        const Icon(Icons.mark_email_read_outlined,
+            size: 80, color: AppTheme.successColor),
         const SizedBox(height: 24),
         const Center(
           child: Text(

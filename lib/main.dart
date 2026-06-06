@@ -1,22 +1,33 @@
 import 'package:device_preview/device_preview.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+
 import 'app_theme.dart';
+import 'firebase_options.dart';
 import 'screens/login_screen.dart';
+import 'services/auth_service.dart';
 import 'services/cart_service.dart';
+import 'services/firestore_service.dart';
 
 final getIt = GetIt.instance;
 
 void setup() {
   getIt.registerLazySingleton<CartService>(() => CartService());
+  getIt.registerLazySingleton<AuthService>(() => AuthService());
+  getIt.registerLazySingleton<FirestoreService>(() => FirestoreService());
 }
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   setup();
   runApp(
     DevicePreview(
-      enabled: !kReleaseMode,
+      enabled: kDebugMode,
       builder: (context) => const OcaDoAcaiApp(),
     ),
   );
