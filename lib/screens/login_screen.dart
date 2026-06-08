@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 
 import '../app_theme.dart';
 import '../services/auth_service.dart';
+import 'admin_screen.dart';
 import 'forgot_password_screen.dart';
 import 'menu_screen.dart';
 import 'register_screen.dart';
@@ -57,9 +58,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
 
+      final isAdmin = _emailController.text.trim() == AdminScreen.adminEmail;
+
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => const MenuScreen()),
+        MaterialPageRoute(
+          builder: (_) => isAdmin ? const AdminScreen() : const MenuScreen(),
+        ),
         (route) => false,
       );
     } on FirebaseAuthException catch (e) {
