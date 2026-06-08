@@ -9,8 +9,6 @@ import '../services/firestore_service.dart';
 import '../widgets/app_drawer.dart';
 import 'cart_screen.dart';
 
-
-// Categorias na mesma ordem do cardápio físico
 const List<String> _kCategories = [
   'Açaí na Tigela',
   'Tapiocas',
@@ -73,6 +71,7 @@ class _MenuScreenState extends State<MenuScreen>
           label: 'Ver carrinho',
           textColor: AppTheme.secondaryColor,
           onPressed: () {
+            if (!mounted) return; // ← correção do erro
             Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const CartScreen()));
           },
@@ -135,12 +134,9 @@ class _MenuScreenState extends State<MenuScreen>
         ),
       ),
       drawer: const AppDrawer(),
-      
-      // StreamBuilder escuta o Firestore em tempo real
       body: StreamBuilder<List<Product>>(
         stream: _firestoreService.cardapioStream(),
         builder: (context, snapshot) {
-          // Estado de carregamento
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: Column(
@@ -154,7 +150,6 @@ class _MenuScreenState extends State<MenuScreen>
             );
           }
 
-          // Estado de erro
           if (snapshot.hasError) {
             return Center(
               child: Padding(
@@ -181,7 +176,6 @@ class _MenuScreenState extends State<MenuScreen>
             );
           }
 
-          // Estado sem dados
           final allProducts = snapshot.data ?? [];
           if (allProducts.isEmpty) {
             return const Center(
@@ -189,7 +183,6 @@ class _MenuScreenState extends State<MenuScreen>
             );
           }
 
-          // Monta as abas com os dados do Firestore
           return TabBarView(
             controller: _tabController,
             children: _kCategories.map((cat) {
@@ -208,7 +201,6 @@ class _MenuScreenState extends State<MenuScreen>
   }
 }
 
-// ─── Aba de uma categoria ─────────────────────────────────────────────────────
 class _CategoryTab extends StatelessWidget {
   final String category;
   final List<Product> products;
@@ -240,7 +232,6 @@ class _CategoryTab extends StatelessWidget {
   }
 }
 
-// ─── Card de produto ──────────────────────────────────────────────────────────
 class _ProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback onAddToCart;
@@ -315,7 +306,6 @@ class _ProductCard extends StatelessWidget {
   }
 }
 
-// ─── Imagem do produto ────────────────────────────────────────────────────────
 class _ProductImage extends StatelessWidget {
   final String imagePath;
   const _ProductImage({required this.imagePath});
